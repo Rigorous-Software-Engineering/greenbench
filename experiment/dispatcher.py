@@ -24,6 +24,7 @@ import threading
 import time
 from typing import List
 
+from common import random_corpus_fuzzing_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import logs
@@ -131,7 +132,8 @@ def build_images_for_trials(fuzzers: List[str],
             models.Trial(fuzzer=fuzzer,
                          experiment=experiment_name,
                          benchmark=benchmark,
-                         preemptible=preemptible) for _ in range(num_trials)
+                         preemptible=preemptible,
+                         trial_group_num=trial) for trial in range(num_trials)
         ]
         trials.extend(fuzzer_benchmark_trials)
     return trials
@@ -158,6 +160,11 @@ def dispatcher_main():
                                      experiment.preemptible,
                                      experiment.config['concurrent_builds'])
     _initialize_trials_in_db(trials)
+
+    if experiment.config['random_corpus'] or experiment.config['target_fuzzing']:  # pylint: disable=line-too-long
+        random_corpus_fuzzing_utils.initialize_random_corpus_fuzzing(
+            experiment.benchmarks, experiment.num_trials,
+            experiment.config['target_fuzzing'])
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 

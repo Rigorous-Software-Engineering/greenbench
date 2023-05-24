@@ -79,6 +79,9 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     local_experiment = config.get('local_experiment', False)
     snapshot_period = config.get('snapshot_period',
                                  experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
+    random_corpus = config.get('random_corpus', False)
+    target_fuzzing = config.get('target_fuzzing', False)
+
     if not local_experiment:
         required_params = required_params.union(cloud_config)
 
@@ -136,6 +139,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     config['local_experiment'] = local_experiment
     config['snapshot_period'] = snapshot_period
+    config['random_corpus'] = random_corpus
+    config['target_fuzzing'] = target_fuzzing
     return config
 
 
@@ -279,6 +284,13 @@ def start_experiment(  # pylint: disable=too-many-arguments
     if config['custom_seed_corpus_dir']:
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
+    if config['target_fuzzing'] and not config['custom_seed_corpus_dir']:
+        raise ValidationError(
+            'Target fuzzing can only be run with custom seed corpus')
+
+    if config['random_corpus'] and not config['custom_seed_corpus_dir']:
+        raise ValidationError(
+            'Random corpus option can only be run with custom seed corpus')
 
     return start_experiment_from_full_config(config)
 
@@ -425,6 +437,8 @@ class LocalDispatcher(BaseDispatcher):
             snapshot_period=self.config['snapshot_period'])
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
+        dispatcher_cached_image = "gcr.io/fuzzbench/dispatcher-image@sha256:b0367850f99603cf0c7938505de0861ccb284f1fcae44fbdc940110e900d103f"
+        docker_image_url = dispatcher_cached_image
         command = [
             'docker',
             'run',
@@ -508,6 +522,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'cloud_sql_instance_connection_name':
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
+            'snapshot_period': self.config['snapshot_period'],
         }
         return template.render(**kwargs)
 

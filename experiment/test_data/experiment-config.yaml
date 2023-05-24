@@ -33,6 +33,8 @@ no_seeds: false
 no_dictionaries: false
 oss_fuzz_corpus: false
 custom_seed_corpus_dir: null
+random_corpus: false
+target_fuzzing: false
 description: "Test experiment"
 concurrent_builds: null
 runners_cpus: null

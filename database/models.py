@@ -50,6 +50,7 @@ class Trial(Base):
     benchmark = Column(String, nullable=False)
     time_started = Column(DateTime(), nullable=True)
     time_ended = Column(DateTime(), nullable=True)
+    trial_group_num = Column(Integer, nullable=True)
 
     # Columns used for preemptible experiments.
     preemptible = Column(Boolean, default=False, nullable=False)
@@ -71,6 +72,8 @@ class Snapshot(Base):
     trial_id = Column(Integer, ForeignKey('trial.id'), primary_key=True)
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
+    targets_covered = Column(Integer, nullable=False)
+    trial_group_num = Column(Integer, nullable=False)
     fuzzer_stats = Column(JSON, nullable=True)
     crashes = sqlalchemy.orm.relationship(
         'Crash',
@@ -94,3 +97,13 @@ class Crash(Base):
 
     __table_args__ = (ForeignKeyConstraint(
         [time, trial_id], ['snapshot.time', 'snapshot.trial_id']),)
+
+
+class TargetCoverage(Base):
+    """Represents target branches for the target fuzzing mode."""
+    __tablename__ = 'target_coverage'
+
+    id = Column(Integer, primary_key=True)
+    benchmark = Column(String, nullable=False)
+    trial_group_num = Column(Integer, nullable=False)
+    target_location = Column(String, nullable=False)

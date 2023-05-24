@@ -41,6 +41,8 @@ RUN cd /tmp/ && \
     make -j install && \
     rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
 
+# upgrade to install PyQt5 successfully
+RUN python3 -m pip install --upgrade pip
 # Install common python dependencies.
 COPY ./requirements.txt /
 RUN pip3 install -r /requirements.txt
